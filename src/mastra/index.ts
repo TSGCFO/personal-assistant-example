@@ -1,9 +1,15 @@
-import { Mastra } from "@mastra/core/mastra";
-import { ConsoleLogger } from "@mastra/core/logger";
+import { Mastra } from "@mastra/core";
+import { PinoLogger } from "@mastra/loggers";
 import { TelegramIntegration } from "./integrations/telegram";
 import { personalAssistantAgent } from "./agents/personalAssistantAgent";
-import { dailyWorkflow } from "./workflows";
-import { LibSQLStore } from "@mastra/libsql";
+import { 
+  dailyWorkflow,
+  urgentGmailWorkflow,
+  workEmailWorkflow,
+  googleCalendarWorkflow,
+  workCalendarWorkflow,
+} from "./workflows";
+import { PostgresStore } from "@mastra/pg";
 import { weatherAgent } from "./agents/weatherAgent";
 
 export const mastra: Mastra = new Mastra({
@@ -13,12 +19,17 @@ export const mastra: Mastra = new Mastra({
   },
   workflows: {
     dailyWorkflow,
+    urgentGmailWorkflow,
+    workEmailWorkflow,
+    googleCalendarWorkflow,
+    workCalendarWorkflow,
   },
-  logger: new ConsoleLogger({
+  logger: new PinoLogger({
+    name: "Mastra",
     level: "info",
   }),
-  storage: new LibSQLStore({
-    url: "file:./mastra.db",
+  storage: new PostgresStore({
+    connectionString: process.env.DATABASE_URL!,
   }),
 });
 

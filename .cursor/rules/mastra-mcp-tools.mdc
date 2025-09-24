@@ -57,7 +57,7 @@ Before performing ANY planning or implementation steps related to Mastra:
    - Check for breaking changes or new capabilities
 
 4. **Consult Blog for Updates**
-   - Use the `mcp_mastra_mastraBlog` tool for announcements and feature posts
+   - Use the `mcp_mastra_mastraBlog` tool for announcements and feature posts and projects shared by the community
    - Check for recent updates that might affect your implementation
 
 ## Implementation Process

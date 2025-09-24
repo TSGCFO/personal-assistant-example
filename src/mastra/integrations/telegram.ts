@@ -1,5 +1,6 @@
 import TelegramBot from "node-telegram-bot-api";
 import { personalAssistantAgent } from "../agents/personalAssistantAgent";
+import { emailTriggerSystem } from "../triggers/emailTriggers";
 
 export class TelegramIntegration {
   private bot: TelegramBot;
@@ -96,14 +97,14 @@ export class TelegramIntegration {
       let currentMessageId = sentMessage.message_id;
       const UPDATE_INTERVAL = 500; // Update every 500ms to avoid rate limits
 
-      // Stream response using the agent
+      // Stream response using the agent with resource-scoped memory
       const stream = await personalAssistantAgent.stream(text, {
         threadId: `telegram-${chatId}`, // Use chat ID as thread ID
-        resourceId: userId, // Use user ID as resource ID
+        resourceId: userId, // Use user ID as resource ID for persistent memory
         context: [
           {
             role: "system",
-            content: `Current user: ${firstName} (${username})`,
+            content: `Current user: ${firstName} (${username}) - Telegram User ID: ${userId}`,
           },
         ],
       });
@@ -181,6 +182,41 @@ export class TelegramIntegration {
       await this.bot.sendMessage(
         chatId,
         "Sorry, I encountered an error processing your message. Please try again."
+      );
+    }
+  }
+
+  // Add method to trigger workflows from Telegram
+  async triggerWorkflowFromMessage(chatId: number, workflowType: string, triggerData: any) {
+    try {
+      let result;
+      
+      switch (workflowType) {
+        case 'urgent-gmail':
+          result = await emailTriggerSystem.triggerUrgentGmailWorkflow(triggerData);
+          break;
+        case 'work-email':
+          result = await emailTriggerSystem.triggerWorkEmailWorkflow(triggerData);
+          break;
+        case 'google-calendar':
+          result = await emailTriggerSystem.triggerCalendarWorkflow(triggerData);
+          break;
+        case 'work-calendar':
+          result = await emailTriggerSystem.triggerWorkCalendarWorkflow(triggerData);
+          break;
+        default:
+          throw new Error(`Unknown workflow type: ${workflowType}`);
+      }
+
+      await this.bot.sendMessage(
+        chatId,
+        `Workflow triggered: ${workflowType}\nResult: ${JSON.stringify(result, null, 2)}`
+      );
+    } catch (error) {
+      console.error("Error triggering workflow:", error);
+      await this.bot.sendMessage(
+        chatId,
+        `Error triggering workflow: ${error instanceof Error ? error.message : String(error)}`
       );
     }
   }

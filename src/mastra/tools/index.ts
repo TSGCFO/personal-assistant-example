@@ -104,19 +104,20 @@ function getWeatherCondition(code: number): string {
   return conditions[code] || "Unknown";
 }
 
-// export const dailyWorkflowTool = createTool({
-//   id: "daily-workflow-tool",
-//   description:
-//     "Runs the daily workflow task which returns a summary of news and github activity",
-
-//   outputSchema: z.object({
-//     message: z.string(),
-//   }),
-//   execute: async ({ context }) => {
-//     const { runId, start } = mastra.getWorkflow("dailyWorkflow").createRun();
-//     const result = await start();
-//     return {
-//       message: result?.result?.message || "",
-//     };
-//   },
-// });
+export const dailyWorkflowTool = createTool({
+  id: "daily-workflow-tool",
+  description:
+    "Runs the daily workflow task which returns a summary of news and github activity",
+  inputSchema: z.object({}),
+  outputSchema: z.object({
+    message: z.string(),
+  }),
+  execute: async ({ context }) => {
+    const workflow = mastra.getWorkflow("dailyWorkflow");
+    const run = await workflow.createRunAsync();
+    const result = await run.start({ inputData: {} });
+    return {
+      message: result.status === 'success' ? result.result?.message || "" : "Workflow failed",
+    };
+  },
+});
